@@ -1,51 +1,56 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
-using TelegramEZMod.Services;
+using Telegram.Bot.Types.Enums;
 
-public class BotHostedService : IHostedService
+namespace TelegramBot.Services
 {
-    private readonly BotService _botService;
-    private readonly TelegramBotClient _botClient;
-
-    public BotHostedService(BotService botService, string botToken)
+    public class BotHostedService : IHostedService
     {
-        _botService = botService;
-        _botClient = new TelegramBotClient(botToken);
-    }
+        private readonly BotService _botService;
+        private readonly ReceiverOptions _receiverOptions;
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        var receiverOptions = new ReceiverOptions
+        public BotHostedService(BotService botService)
         {
-            AllowedUpdates = Array.Empty<UpdateType>() // receive all update types
-        };
+            _botService = botService;
 
-        _botClient.StartReceiving(
-            HandleUpdateAsync,
-            HandleErrorAsync,
-            receiverOptions,
-            cancellationToken
-        );
+            // Configure receiver options if needed
+            _receiverOptions = new ReceiverOptions
+            {
+                AllowedUpdates = Array.Empty<UpdateType>() // Receive all update types
+            };
+        }
 
-        return Task.CompletedTask;
-    }
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            // Start receiving updates from Telegram
+            _botService._botClient.StartReceiving(
+                HandleUpdateAsync,
+                HandleErrorAsync,
+                _receiverOptions,
+                cancellationToken
+            );
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+            return Task.CompletedTask;
+        }
 
-    private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-    {
-        await _botService.HandleUpdateAsync(update);
-    }
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            // Perform any necessary cleanup when the service is stopped
+            return Task.CompletedTask;
+        }
 
-    private Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
-    {
-        // Handle errors here
-        Console.WriteLine(exception.Message);
-        return Task.CompletedTask;
+        private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            // Delegate the update handling to BotService
+            await _botService.HandleUpdateAsync(update);
+        }
+
+        private Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+        {
+            // Handle errors from the Telegram Bot API
+            Console.WriteLine($"Telegram Bot API error: {exception.Message}");
+            return Task.CompletedTask;
+        }
     }
 }
