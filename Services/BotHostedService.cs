@@ -3,7 +3,7 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace TelegramBot.Services
+namespace TelegramEZMod.Services
 {
     public class BotHostedService : IHostedService
     {
@@ -24,7 +24,7 @@ namespace TelegramBot.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // Start receiving updates from Telegram
-            _botService._botClient.StartReceiving(
+            _botService.BotClient.StartReceiving(
                 HandleUpdateAsync,
                 HandleErrorAsync,
                 _receiverOptions,
